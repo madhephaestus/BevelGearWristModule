@@ -2,13 +2,18 @@ LengthParameter printerOffset 			= new LengthParameter("printerOffset",0.5,[1.2,
 
 double pinRadius = ((3/16)*25.4+printerOffset.getMM())/2
 
-double pinLength = (1.25*25.4)+ (printerOffset.getMM()*2)
-
-
+double pinLength = (20)+ (printerOffset.getMM()*2)
+String size ="M5"
+HashMap<String, Object>  boltData = Vitamins.getConfiguration( "capScrew",size)
+HashMap<String, Object>  nutData = Vitamins.getConfiguration( "nut",size)
+CSG nut =Vitamins.get("nut",size)
+CSG netKeepaway =nut.hull().makeKeepaway(printerOffset.getMM())
+println "Bolt"+boltData
+println "nut"+nutData
 println "Pin len ="+pinLength
 if(args == null){
 	args=[
-		Vitamins.get("ballBearing","R8-60355K505"),
+		Vitamins.get("ballBearing","695zz"),
 		new Cylinder(pinRadius,pinRadius,pinLength,(int)30).toCSG(), // steel reenforcmentPin
 		new Cylinder(pinRadius,pinRadius,pinLength,(int)30).toCSG().movez(-pinLength/2) // steel reenforcmentPin
 		
@@ -21,12 +26,12 @@ double washerId = 12.75
 double bearingThickness = args[0].getMaxZ()
 double gearThickness =(pinLength -(bearingThickness*3 -washerThickness*2))/2
 
-double encoderToEncoderDistance =args[0].getMaxX()*2+
+double encoderToEncoderDistance =args[0].getMaxX()*3+
 					gearThickness*2 -
 					washerThickness*4 +
 					args[0].getMaxZ()*2+
 					bearingThickness*2
-double pitch = 5
+double pitch = 3
 int aTeeth =    Math.PI*(encoderToEncoderDistance+washerThickness*2)/pitch
 int bTeeth =    Math.PI*(args[0].getMaxX()+washerThickness*2+gearThickness)*2/pitch 
 
@@ -64,6 +69,7 @@ println "Bevel tooth face length " + bevelGears.get(5)
 double distanceToShaft =bevelGears.get(3)
 double distancetoGearFace = bevelGears.get(2)
 double distanceToMotor = bevelGears.get(3)+spurGears[2]+spurGears[3]
+
 def spurs =[spurGears[1],spurGears[0]].collect{
 		it.roty(-90)
 		.movez(distanceToShaft)
@@ -76,6 +82,7 @@ def spursB = spurs.collect{
 }
 CSG driveB = spursB[0]
 CSG drivenB = spursB[1]
+
 
 CSG outputGear = bevelGears.get(0)
 CSG adrive = bevelGears.get(1).rotz(180).union(drivenA)
@@ -97,8 +104,9 @@ CSG bearing =args[0]
 			.movez(bevelGears.get(3))
 bearing=CSG.unionAll([bearing,
 		bearing.rotz(180),
-		args[0].movez(gearThickness+washerThickness),
-		innerBearing
+		args[0].toZMax().movez(distanceToShaft),
+		innerBearing,
+		innerBearing.rotz(180)
 		])
 CSG pin  = args[1]
 			.roty(-90)
@@ -108,5 +116,5 @@ CSG pin  = args[1]
 CSG motor = 	args[2]
 			.roty(-90)
 			.movez(	distanceToMotor)
-
-return [gears,pin,bearing,driveA,driveB,motor]
+def nuts =[ nut.movez(distanceToShaft)]
+return [gears,pin,bearing,driveA,driveB,motor,nuts]
