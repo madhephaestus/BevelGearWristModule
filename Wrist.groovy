@@ -2,9 +2,8 @@ LengthParameter printerOffset 			= new LengthParameter("printerOffset",0.5,[1.2,
 LengthParameter boltlen 			= new LengthParameter("Bolt Length",0.5,[1.2,0])
 double pitch = 3
 double pinRadius = ((3/16)*25.4+printerOffset.getMM())/2
-
 double pinLength = (16)+ (printerOffset.getMM()*2)
-double actualBoltLength = 30
+double actualBoltLength = 35
 double boltPattern = 10
 String size ="M5"
 HashMap<String, Object>  boltData = Vitamins.getConfiguration( "capScrew",size)
@@ -13,6 +12,12 @@ CSG nut =Vitamins.get("lockNut",size)
 
 CSG nutKeepaway =nut.hull().makeKeepaway(printerOffset.getMM())
 double nutHeight = nut.getMaxZ()
+double washerRadius =  boltData.outerDiameter
+double washerThickness = 3
+def washer = new Cylinder(washerRadius,washerThickness).toCSG()
+			.difference(new Cylinder(boltData.outerDiameter/2+printerOffset.getMM()/2,washerThickness).toCSG())
+def washerKeepaway = 	new Cylinder(washerRadius+printerOffset.getMM(),washerThickness).toCSG()	
+
 println "Bolt"+boltData
 println "nut"+nutData
 println "Pin len ="+pinLength
@@ -25,7 +30,7 @@ if(args == null){
 	]
 }
 double linkMaterialThickness = pinLength/2
-double washerThickness = 1.5
+
 double washerOd = 17
 double washerId = 12.75
 double bearingThickness = args[0].getMaxZ()
@@ -72,8 +77,10 @@ println "Bevel gear radius A " + bevelGears.get(2)
 println "Bevel gear radius B " + bevelGears.get(3)
 println "Spur gear radius A " + spurGears.get(2)
 println "Spur gear radius B " + spurGears.get(3)
-double ratio = spurGears[2]/spurGears[3]*bevelGears[2]/bevelGears[3]
-println "Total Wrist Ratio is " +ratio
+double ratio1 = (spurGears[7])
+double ratio2 = (bevelGears[7])
+double ratio = ratio1*ratio2
+println "Total Wrist Ratio is 1=" +ratio1+" 2="+ratio2+" total = "+ratio
 encoderToEncoderDistance = bevelGears.get(2)*2
 double gearBThickness =bevelGears.get(6)
 double distanceToShaft =bevelGears.get(3)
@@ -115,7 +122,7 @@ CSG bearing =args[0]
 			.movex(  encoderToEncoderDistance/2+gearThickness+washerThickness)
 			.movez(bevelGears.get(3))
 def bearingHeight = bearingThickness+washerThickness+gearThickness
-def boltlenvalue= washerThickness*3+bearingThickness*2+gearBThickness+gearThickness+nutHeight
+def boltlenvalue= washerThickness*2+bearingThickness*2+gearBThickness+gearThickness+nutHeight
 println "Bolt length ="+boltlenvalue
 boltlen.setMM(actualBoltLength)
 CSG bolt = Vitamins.get("capScrew",size)
@@ -145,6 +152,19 @@ new Transform()
 		.rot( 0, 90, 0) // x,y,z
 		
 ]
+
+def washerLocations =[
+new Transform().movez(gearThickness),
+new Transform().roty(-90).movez(distanceToShaft).movex(bearingLocation),
+new Transform().roty(90).movez(distanceToShaft).movex(encoderToEncoderDistance/2+gearThickness+washerThickness),
+new Transform().roty(90).movez(distanceToShaft).movex(-bearingLocation),
+new Transform().roty(-90).movez(distanceToShaft).movex(-(encoderToEncoderDistance/2+gearThickness+washerThickness))
+]
+
+def allWashers = washerLocations.collect{
+	washer.transformed(it)
+}
+
 def mountBoltHeight = gearThickness-1
 def mountLocations =[
 new Transform().translate(boltPattern,boltPattern,mountBoltHeight),
@@ -153,8 +173,13 @@ new Transform().translate(-boltPattern,boltPattern,mountBoltHeight),
 new Transform().translate(boltPattern,-boltPattern,mountBoltHeight)
 ]
 def boltKeepaway = bolt.toolOffset(printerOffset.getMM())
+def NutKW =CSG.unionAll(Extrude.revolve(nut.hull().makeKeepaway(printerOffset.getMM()),
+		(double)0, // rotation center radius, if 0 it is a circle, larger is a donut. Note it can be negative too
+		(double)55,// degrees through wich it should sweep
+		(int)5))
+		
 def nuts = nutLocations.collect{
-	nut.transformed(it)
+	NutKW.transformed(it)
 }
 def bolts = nutLocations.collect{
 	boltKeepaway.transformed(it)
@@ -177,4 +202,4 @@ outputGear=outputGear
 			.difference(mountNuts)
 			.difference(mountBolts)
 
-return [outputGear,adrive,bdrive,bearing,driveA,driveB,nuts,bolts]
+return [outputGear,adrive,bdrive,bearing,driveA,driveB,nuts,bolts,allWashers]
