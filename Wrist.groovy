@@ -1,6 +1,6 @@
 LengthParameter printerOffset 			= new LengthParameter("printerOffset",0.5,[1.2,0])
 LengthParameter boltlen 			= new LengthParameter("Bolt Length",0.5,[1.2,0])
-double pitch = 3
+double pitch = 4
 double pinRadius = ((3/16)*25.4+printerOffset.getMM())/2
 double pinLength = (16)+ (printerOffset.getMM()*2)
 double actualBoltLength = 35
@@ -109,14 +109,14 @@ CSG bdrive = bevelGears.get(1).union(drivenB)
 // return the CSG parts
 
 double bearingLocation =  adrive.getMinX()-washerThickness
-CSG innerBearing = args[0]
+CSG innerBearing = args[0].hull()
 			.toZMin()
 			.roty(-90)
 			.toXMax()
 			.movex( bearingLocation)
 			.movez(bevelGears.get(3))
 
-CSG bearing =args[0]
+CSG bearing =args[0].hull()
 			.toZMin()
 			.roty(-90)
 			.movex(  encoderToEncoderDistance/2+gearThickness+washerThickness)
@@ -131,7 +131,7 @@ CSG bolt = Vitamins.get("capScrew",size)
 			.movez(nut.getMaxZ() +(actualBoltLength-boltlenvalue))
 bearing=CSG.unionAll([bearing,
 		bearing.rotz(180),
-		args[0].toZMax().movez(bearingHeight),
+		args[0].hull().toZMax().movez(bearingHeight),
 		innerBearing,
 		innerBearing.rotz(180)
 		])
@@ -144,11 +144,11 @@ new Transform()
  ,
  new Transform()
  		
-		.translate( -bearingLocation+ bearingThickness,0,distanceToShaft)// X , y, z
+		.translate( -bearingLocation+ bearingThickness+washerThickness/4,0,distanceToShaft)// X , y, z
 		.rot( 0, -90, 0) // x,y,z
   ,
   new Transform()
-		.translate(bearingLocation-bearingThickness,0,distanceToShaft)// X , y, z		
+		.translate(bearingLocation-bearingThickness-washerThickness/4,0,distanceToShaft)// X , y, z		
 		.rot( 0, 90, 0) // x,y,z
 		
 ]
@@ -193,7 +193,7 @@ nuts.addAll(mountLocations.collect{
 def mountBolts = mountLocations.collect{
 	boltKeepaway.transformed(it)
 }
-def sweep = Extrude.revolve(mountNuts[0],
+def sweep = Extrude.revolve(mountNuts[0].union(mountNuts[0].movez(0.5)),
 		(double)0, // rotation center radius, if 0 it is a circle, larger is a donut. Note it can be negative too
 		(double)360,// degrees through wich it should sweep
 		(int)20)//number of sweep increments
@@ -201,5 +201,22 @@ def sweep = Extrude.revolve(mountNuts[0],
 outputGear=outputGear
 			.difference(mountNuts)
 			.difference(mountBolts)
+double knuckelThicknessAdd = 2
+double knuckelY = args[0].getTotalY()+knuckelThicknessAdd*2
+double knuckelZ = distanceToShaft+(knuckelY/2)-gearThickness+knuckelThicknessAdd
+double knuckelX = encoderToEncoderDistance-(gearBThickness*2)-1
+def knuckel = new Cube(knuckelX,knuckelY,knuckelZ).toCSG()
+				.toZMin()
+				.movez(gearThickness+0.5)
+				.difference(sweep)
+				.difference(nuts)
+				.difference(bolts)
+				.difference(allWashers)
+				.difference(bearing)
+				
+def bbox = knuckel.getBoundingBox()
+			.toYMin()
+def knuckelLeft = knuckel.intersect(bbox)
+def knuckelRigth = knuckel.difference(bbox)
 
-return [outputGear,adrive,bdrive,bearing,driveA,driveB,nuts,bolts,allWashers]
+return [outputGear,adrive,bdrive,bearing,driveA,driveB,nuts,bolts,allWashers,knuckelLeft]
