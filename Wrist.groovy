@@ -12,7 +12,7 @@ CSG nut =Vitamins.get("lockNut",size)
 
 CSG nutKeepaway =nut.hull().makeKeepaway(printerOffset.getMM())
 double nutHeight = nut.getMaxZ()
-double washerRadius =  boltData.outerDiameter
+double washerRadius =  boltData.outerDiameter/2+printerOffset.getMM()*2
 double washerThickness = 3
 def washer = new Cylinder(washerRadius,washerThickness).toCSG()
 			.difference(new Cylinder(boltData.outerDiameter/2+printerOffset.getMM()/2,washerThickness).toCSG())
@@ -140,7 +140,7 @@ CSG motor = 	args[2]
 			.movez(	distanceToMotor)
 def nutLocations =[
 new Transform()
-	.translate(0,0,bearingHeight)// X , y, z	
+	.translate(0,0,bearingHeight+washerThickness/4)// X , y, z	
  ,
  new Transform()
  		
@@ -211,7 +211,7 @@ def knuckel = new Cube(knuckelX,knuckelY,knuckelZ).toCSG()
 				.difference(sweep)
 				.difference(nuts)
 				.difference(bolts)
-				.difference(allWashers)
+				.difference(allWashers.collect{it.hull().toolOffset(1)})
 				.difference(bearing)
 				
 def bbox = knuckel.getBoundingBox()
