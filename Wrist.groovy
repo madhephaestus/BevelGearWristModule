@@ -1,3 +1,4 @@
+CSGDatabase.clear()
 LengthParameter printerOffset 			= new LengthParameter("printerOffset",0.5,[1.2,0])
 LengthParameter boltlen 			= new LengthParameter("Bolt Length",0.5,[1.2,0])
 def motorOptions = []
@@ -9,11 +10,10 @@ for(String vitaminsType: Vitamins.listVitaminTypes()){
 	if(meta !=null && meta.containsKey("shaft"))
 		shaftOptions.add(vitaminsType);
 }
-
 StringParameter motors = new StringParameter("Motor Type","hobbyServo",motorOptions)
 StringParameter shafts = new StringParameter("Shaft Type","hobbyServoHorn",motorOptions)
-StringParameter motorSize = new StringParameter("Motor Size","hv6214mg",Vitamins.listVitaminSizes(motors.getStrValue()))
-StringParameter shaftSize = new StringParameter("Shaft Size","hv6214mg_1",Vitamins.listVitaminSizes(shafts.getStrValue()))
+StringParameter motorSize = new StringParameter("Motor Size","towerProMG91",Vitamins.listVitaminSizes(motors.getStrValue()))
+StringParameter shaftSize = new StringParameter("Shaft Size","tproSG90_1",Vitamins.listVitaminSizes(shafts.getStrValue()))
 
 def motorBlank= Vitamins.get(motors.getStrValue(),motorSize.getStrValue())
 def shaftBlank= Vitamins.get(shafts.getStrValue(),shaftSize.getStrValue())
@@ -32,14 +32,7 @@ CSG nut =Vitamins.get("lockNut",size)
 CSG nutKeepaway =nut.hull().makeKeepaway(printerOffset.getMM())
 double nutHeight = nut.getMaxZ()
 double washerRadius =  boltData.outerDiameter/2+printerOffset.getMM()*2
-double washerThickness = 3
-def washer = new Cylinder(washerRadius,washerThickness).toCSG()
-			.difference(new Cylinder(boltData.outerDiameter/2+printerOffset.getMM()/2,washerThickness).toCSG())
-def washerKeepaway = 	new Cylinder(washerRadius+printerOffset.getMM(),washerThickness).toCSG()	
 
-println "Bolt"+boltData
-println "nut"+nutData
-println "Pin len ="+pinLength
 if(args == null){
 	args=[
 		Vitamins.get("ballBearing","695zz"),
@@ -48,6 +41,15 @@ if(args == null){
 		
 	]
 }
+double washerThickness = motorBlank.getMaxZ()-args[0].getTotalZ()
+def washer = new Cylinder(washerRadius,washerThickness).toCSG()
+			.difference(new Cylinder(boltData.outerDiameter/2+printerOffset.getMM()/2,washerThickness).toCSG())
+def washerKeepaway = 	new Cylinder(washerRadius+printerOffset.getMM(),washerThickness).toCSG()	
+
+println "Bolt"+boltData
+println "nut"+nutData
+println "Pin len ="+pinLength
+
 double linkMaterialThickness = pinLength/2
 
 double washerOd = 17
@@ -84,7 +86,7 @@ List<Object> spurGears = (List<Object>)ScriptingEngine
             "bevelGear.groovy" , // file to load
             // Parameters passed to the funcetion
             [	  bTeeth,// Number of teeth gear a
-	            0.75*(bTeeth-2),// Number of teeth gear b
+	            bTeeth,// Number of teeth gear b
 	            gearThickness,// thickness of gear A
 	            pitch,// gear pitch in arch length mm
 	           0,
@@ -160,14 +162,6 @@ bearing=CSG.unionAll([bearing,
 CSG motor = 	args[2]
 			.roty(-90)
 			.movez(	distanceToMotor)
-double distToGearEdge = encoderToEncoderDistance/2+gearThickness
-double motorAngleOffset = 60
-def MotorLoacations = [
-new Transform()
-	.roty(-90).movez(shaftToMotor).rotx(motorAngleOffset).movez(distanceToShaft).movex(distToGearEdge),
-new Transform()
-	.roty(90).movez(shaftToMotor).rotx(motorAngleOffset).movez(distanceToShaft).movex(-distToGearEdge)
-]
 
 def nutLocations =[
 new Transform()
@@ -225,6 +219,8 @@ nuts.addAll(mountLocations.collect{
 def mountBolts = mountLocations.collect{
 	boltKeepaway.transformed(it)
 }
+
+
 def sweep = Extrude.revolve(mountNuts[0].union(mountNuts[0].movez(0.5)),
 		(double)0, // rotation center radius, if 0 it is a circle, larger is a donut. Note it can be negative too
 		(double)360,// degrees through wich it should sweep
@@ -250,8 +246,19 @@ def bbox = knuckel.getBoundingBox()
 			.toYMin()
 def knuckelLeft = knuckel.intersect(bbox)
 def knuckelRigth = knuckel.difference(bbox)
+
+
+double distToGearEdge = encoderToEncoderDistance/2+gearThickness
+double motorAngleOffset = 60
+def MotorLoacations = [
+new Transform()
+	.roty(-90).movez(shaftToMotor).rotx(motorAngleOffset).movez(distanceToShaft).movex(distToGearEdge),
+new Transform()
+	.roty(90).movez(shaftToMotor).rotx(motorAngleOffset).movez(distanceToShaft).movex(-distToGearEdge)
+]
 def driveGearsFinal = MotorLoacations.collect{
-	centeredSpur.transformed(it)
+	centeredSpur.difference (shaftBlank
+	.toZMax()).transformed(it)
 }
 def allMotors = MotorLoacations.collect{
 	motorBlank
@@ -260,9 +267,30 @@ def allMotors = MotorLoacations.collect{
 	.transformed(it)
 }
 def allShafts = MotorLoacations.collect{
-	shaftBlank.transformed(it)
+	shaftBlank
+	.toZMax()
+	.transformed(it)
+}
+def upperMountLocations = mountLocations.collect{
+	it.movez(distanceToShaft*2)
+}
+def upperNuts = upperMountLocations.collect{
+	nut.transformed(it)
+}
+def uppermountNuts = upperMountLocations.collect{
+	nutKeepaway.transformed(it)
+}
+def upperBOlt = Vitamins.get("capScrew",size)
+			.roty(180)
+			.movez(-nut.getMaxZ()-washerThickness)
+			.toolOffset(printerOffset.getMM())
+def uppermountBolts = upperMountLocations.collect{
+	upperBOlt.transformed(it)
 }
 
 
-
-return [outputGear,adrive,bdrive,bearing,nuts,bolts,allWashers,knuckelLeft,driveGearsFinal,centeredSpur,allMotors,allShafts]
+return [outputGear,adrive,bdrive,bearing,nuts,bolts,allWashers,knuckelLeft,driveGearsFinal,centeredSpur,allMotors,allShafts,
+upperNuts,
+uppermountNuts,
+uppermountBolts
+]
