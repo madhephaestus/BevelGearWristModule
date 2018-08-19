@@ -18,7 +18,7 @@ StringParameter shaftSize = new StringParameter("Shaft Size","tproSG90_1",Vitami
 def motorBlank= Vitamins.get(motors.getStrValue(),motorSize.getStrValue())
 def shaftBlank= Vitamins.get(shafts.getStrValue(),shaftSize.getStrValue())
 
-//return [motorBlank,shaftBlank]
+double knuckelThicknessAdd = 2
 double pitch = 6
 double pinRadius = ((3/16)*25.4+printerOffset.getMM())/2
 double pinLength = (16)+ (printerOffset.getMM()*2)
@@ -103,6 +103,7 @@ double ratio2 = (bevelGears[7])
 double ratio = ratio1*ratio2
 println "Total Wrist Ratio is 1=" +ratio1+" 2="+ratio2+" total = "+ratio
 encoderToEncoderDistance = bevelGears.get(2)*2
+double outerBearingDistance = (encoderToEncoderDistance/2+gearThickness+washerThickness+args[0].getTotalZ())*2
 double gearBThickness =bevelGears.get(6)
 double distanceToShaft =bevelGears.get(3)
 double distancetoGearFace = bevelGears.get(2)
@@ -227,9 +228,10 @@ def sweep = Extrude.revolve(mountNuts[0].union(mountNuts[0].movez(0.5)),
 		(int)20)//number of sweep increments
 	
 outputGear=outputGear
+			.union()
 			.difference(mountNuts)
 			.difference(mountBolts)
-double knuckelThicknessAdd = 2
+
 double knuckelY = args[0].getTotalY()+knuckelThicknessAdd*2
 double knuckelZ = distanceToShaft+(knuckelY/2)-gearThickness+knuckelThicknessAdd
 double knuckelX = encoderToEncoderDistance-(gearBThickness*2)-1
@@ -249,13 +251,24 @@ def knuckelRigth = knuckel.difference(bbox)
 
 
 double distToGearEdge = encoderToEncoderDistance/2+gearThickness
-double motorAngleOffset = 60
+double motorAngleOffset = 75
 def MotorLoacations = [
 new Transform()
 	.roty(-90).movez(shaftToMotor).rotx(motorAngleOffset).movez(distanceToShaft).movex(distToGearEdge),
 new Transform()
 	.roty(90).movez(shaftToMotor).rotx(motorAngleOffset).movez(distanceToShaft).movex(-distToGearEdge)
 ]
+double boltMountHeight =distanceToShaft*2-mountBoltHeight+ knuckelThicknessAdd
+double upperPlateBoltPattern  = boltPattern+7
+double motorBrackerTHick = washerThickness+args[0].getTotalZ()
+def mountLocationsOuterUpper =[
+new Transform().roty(-90).movex(outerBearingDistance/2).movey(upperPlateBoltPattern),
+new Transform().roty(-90).movex(outerBearingDistance/2).movey(-upperPlateBoltPattern),
+new Transform().roty(90).movex(-outerBearingDistance/2).movey(upperPlateBoltPattern),
+new Transform().roty(90).movex(-outerBearingDistance/2).movey(-upperPlateBoltPattern)
+].collect{
+	it.movez(boltMountHeight+nut.getMaxZ()*2)
+}
 def driveGearsFinal = MotorLoacations.collect{
 	centeredSpur.difference (shaftBlank
 	.toZMax()).transformed(it)
@@ -271,26 +284,40 @@ def allShafts = MotorLoacations.collect{
 	.toZMax()
 	.transformed(it)
 }
+double plateTHick = nut.getMaxZ()*2
 def upperMountLocations = mountLocations.collect{
-	it.movez(distanceToShaft*2)
+	it.movez(boltMountHeight)
 }
 def upperNuts = upperMountLocations.collect{
-	nut.transformed(it)
+	nut.roty(180).transformed(it)
 }
 def uppermountNuts = upperMountLocations.collect{
-	nutKeepaway.transformed(it)
+	nutKeepaway.roty(180).transformed(it)
 }
 def upperBOlt = Vitamins.get("capScrew",size)
-			.roty(180)
-			.movez(-nut.getMaxZ()-washerThickness)
+			.movez(nut.getMaxZ()*2)
+			.toolOffset(printerOffset.getMM())
+boltlen.setMM(65)
+def sideUpperBolt = Vitamins.get("capScrew",size)
 			.toolOffset(printerOffset.getMM())
 def uppermountBolts = upperMountLocations.collect{
 	upperBOlt.transformed(it)
 }
 
+def upperSidemountBolts = mountLocationsOuterUpper.collect{
+	sideUpperBolt.transformed(it)
+}
 
-return [outputGear,adrive,bdrive,bearing,nuts,bolts,allWashers,knuckelLeft,driveGearsFinal,centeredSpur,allMotors,allShafts,
+def bracket = new Cube( outerBearingDistance-(motorBrackerTHick)*2,
+					upperSidemountBolts.get(0).getMaxY()*2,
+					plateTHick).toCSG()
+			.toZMin()
+			.movez(boltMountHeight+nut.getMaxZ())
+			.difference(upperSidemountBolts)
+			.difference(uppermountBolts)
+
+return [outputGear,adrive,bdrive,bearing,nuts,bolts,allWashers,knuckelLeft,driveGearsFinal,allMotors,allShafts,
 upperNuts,
-uppermountNuts,
-uppermountBolts
+mountBolts,
+bracket
 ]
