@@ -1,6 +1,25 @@
 LengthParameter printerOffset 			= new LengthParameter("printerOffset",0.5,[1.2,0])
 LengthParameter boltlen 			= new LengthParameter("Bolt Length",0.5,[1.2,0])
-double pitch = 4
+def motorOptions = []
+def shaftOptions = []
+for(String vitaminsType: Vitamins.listVitaminTypes()){
+	HashMap<String, Object> meta = Vitamins.getMeta(vitaminsType);
+	if(meta !=null && meta.containsKey("actuator"))
+		motorOptions.add(vitaminsType);
+	if(meta !=null && meta.containsKey("shaft"))
+		shaftOptions.add(vitaminsType);
+}
+
+StringParameter motors = new StringParameter("Motor Type","hobbyServo",motorOptions)
+StringParameter shafts = new StringParameter("Shaft Type","hobbyServoHorn",motorOptions)
+StringParameter motorSize = new StringParameter("Motor Size","hv6214mg",Vitamins.listVitaminSizes(motors.getStrValue()))
+StringParameter shaftSize = new StringParameter("Shaft Size","hv6214mg_1",Vitamins.listVitaminSizes(shafts.getStrValue()))
+
+def motorBlank= Vitamins.get(motors.getStrValue(),motorSize.getStrValue())
+def shaftBlank= Vitamins.get(shafts.getStrValue(),shaftSize.getStrValue())
+
+//return [motorBlank,shaftBlank]
+double pitch = 6
 double pinRadius = ((3/16)*25.4+printerOffset.getMM())/2
 double pinLength = (16)+ (printerOffset.getMM()*2)
 double actualBoltLength = 35
@@ -64,7 +83,7 @@ List<Object> spurGears = (List<Object>)ScriptingEngine
             "https://github.com/madhephaestus/GearGenerator.git", // git location of the library
             "bevelGear.groovy" , // file to load
             // Parameters passed to the funcetion
-            [	  bTeeth-2,// Number of teeth gear a
+            [	  bTeeth,// Number of teeth gear a
 	            0.75*(bTeeth-2),// Number of teeth gear b
 	            gearThickness,// thickness of gear A
 	            pitch,// gear pitch in arch length mm
@@ -86,20 +105,22 @@ double gearBThickness =bevelGears.get(6)
 double distanceToShaft =bevelGears.get(3)
 double distancetoGearFace = bevelGears.get(2)
 double distanceToMotor = bevelGears.get(3)+spurGears[2]+spurGears[3]
-
-
+double shaftToMotor = spurGears[2]+spurGears[3]
+def centeredSpur = spurGears[1].movex((spurGears[2]+spurGears[3]))
+				.toZMax()
+//return centeredSpur
 
 def spurs =[spurGears[1],spurGears[0]].collect{
 		it.roty(-90)
 		.movez(distanceToShaft)
 		.movex(distancetoGearFace)
 }
-CSG driveA = spurs[0]
+
 CSG drivenA = spurs[1]
 def spursB = spurs.collect{
 	it.rotz(180)
 }
-CSG driveB = spursB[0]
+
 CSG drivenB = spursB[1]
 
 
@@ -135,15 +156,24 @@ bearing=CSG.unionAll([bearing,
 		innerBearing,
 		innerBearing.rotz(180)
 		])
+
 CSG motor = 	args[2]
 			.roty(-90)
 			.movez(	distanceToMotor)
+double distToGearEdge = encoderToEncoderDistance/2+gearThickness
+double motorAngleOffset = 60
+def MotorLoacations = [
+new Transform()
+	.roty(-90).movez(shaftToMotor).rotx(motorAngleOffset).movez(distanceToShaft).movex(distToGearEdge),
+new Transform()
+	.roty(90).movez(shaftToMotor).rotx(motorAngleOffset).movez(distanceToShaft).movex(-distToGearEdge)
+]
+
 def nutLocations =[
 new Transform()
 	.translate(0,0,bearingHeight+washerThickness/4)// X , y, z	
  ,
  new Transform()
- 		
 		.translate( -bearingLocation+ bearingThickness+washerThickness/4,0,distanceToShaft)// X , y, z
 		.rot( 0, -90, 0) // x,y,z
   ,
@@ -152,13 +182,15 @@ new Transform()
 		.rot( 0, 90, 0) // x,y,z
 		
 ]
+def outerPlateLocationL = new Transform().roty(-90).movez(distanceToShaft).movex(-(encoderToEncoderDistance/2+gearThickness+washerThickness))
+def outerPlateLocationR= new Transform().roty(90).movez(distanceToShaft).movex(encoderToEncoderDistance/2+gearThickness+washerThickness)
 
 def washerLocations =[
 new Transform().movez(gearThickness),
 new Transform().roty(-90).movez(distanceToShaft).movex(bearingLocation),
-new Transform().roty(90).movez(distanceToShaft).movex(encoderToEncoderDistance/2+gearThickness+washerThickness),
+outerPlateLocationR,
 new Transform().roty(90).movez(distanceToShaft).movex(-bearingLocation),
-new Transform().roty(-90).movez(distanceToShaft).movex(-(encoderToEncoderDistance/2+gearThickness+washerThickness))
+outerPlateLocationL
 ]
 
 def allWashers = washerLocations.collect{
@@ -218,5 +250,19 @@ def bbox = knuckel.getBoundingBox()
 			.toYMin()
 def knuckelLeft = knuckel.intersect(bbox)
 def knuckelRigth = knuckel.difference(bbox)
+def driveGearsFinal = MotorLoacations.collect{
+	centeredSpur.transformed(it)
+}
+def allMotors = MotorLoacations.collect{
+	motorBlank
+	.toZMax()
+	.rotx(180)
+	.transformed(it)
+}
+def allShafts = MotorLoacations.collect{
+	shaftBlank.transformed(it)
+}
 
-return [outputGear,adrive,bdrive,bearing,driveA,driveB,nuts,bolts,allWashers,knuckelLeft]
+
+
+return [outputGear,adrive,bdrive,bearing,nuts,bolts,allWashers,knuckelLeft,driveGearsFinal,centeredSpur,allMotors,allShafts]
