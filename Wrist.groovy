@@ -210,7 +210,7 @@ def NutKW =CSG.unionAll(Extrude.revolve(nut.hull().makeKeepaway(printerOffset.ge
 		(int)5))
 		
 def nuts = nutLocations.collect{
-	NutKW.transformed(it)
+	NutKW.movez(-0.5).transformed(it)
 }
 def bolts = nutLocations.collect{
 	boltKeepaway.transformed(it)
