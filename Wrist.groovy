@@ -201,7 +201,18 @@ new Transform().translate(boltPattern,-boltPattern,mountBoltHeight),
 new Transform()
 	.rotx(90)
 	.movez(distanceToShaft+nut.getMaxX())
+	.movey(args[0].getMaxX()+knuckelThicknessAdd),
+new Transform()
+	.rotx(90)
+	.movez(distanceToShaft-args[0].getMaxX()-3.5)
 	.movey(args[0].getMaxX()+knuckelThicknessAdd)
+	.movex(washerThickness+args[0].getTotalZ()+2),
+new Transform()
+	.rotx(90)
+	.movez(distanceToShaft-args[0].getMaxX()-3.5)
+	.movey(args[0].getMaxX()+knuckelThicknessAdd)
+	.movex(-(washerThickness+args[0].getTotalZ()+2))
+	
 ]
 def boltKeepaway = bolt.toolOffset(printerOffset.getMM())
 def NutKW =CSG.unionAll(Extrude.revolve(nut.hull().makeKeepaway(printerOffset.getMM()),
@@ -299,7 +310,7 @@ def allShafts = MotorLoacations.collect{
 	.transformed(it)
 }
 double plateTHick = nut.getMaxZ()*2
-def upperMountLocations = mountLocations.collect{
+def upperMountLocations = mountLocations.subList(0, 4).collect{
 	it.movez(boltMountHeight)
 }
 def upperNuts = upperMountLocations.collect{
