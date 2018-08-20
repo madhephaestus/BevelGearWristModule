@@ -17,7 +17,7 @@ StringParameter shaftSize = new StringParameter("Shaft Size","WPI-gb37y3530-50en
 
 def motorBlank= Vitamins.get(motors.getStrValue(),motorSize.getStrValue())
 def shaftBlank= Vitamins.get(shafts.getStrValue(),shaftSize.getStrValue())
-
+double motorAngleOffset = 60
 double knuckelThicknessAdd = 2
 double pitch = 6
 double pinRadius = ((3/16)*25.4+printerOffset.getMM())/2
@@ -86,7 +86,7 @@ List<Object> spurGears = (List<Object>)ScriptingEngine
             "bevelGear.groovy" , // file to load
             // Parameters passed to the funcetion
             [	  bTeeth,// Number of teeth gear a
-	            bTeeth,// Number of teeth gear b
+	            12,// Number of teeth gear b
 	            gearThickness,// thickness of gear A
 	            pitch,// gear pitch in arch length mm
 	           0,
@@ -265,7 +265,7 @@ def knuckelRigth = knuckel.difference(bbox)
 
 
 double distToGearEdge = encoderToEncoderDistance/2+gearThickness
-double motorAngleOffset = 75
+
 def MotorLoacations = [
 new Transform()
 	.roty(-90).movez(shaftToMotor).rotx(motorAngleOffset).movez(distanceToShaft).movex(distToGearEdge),
@@ -357,7 +357,8 @@ def motorBracketSets = [boltLugL,boltLugR].collect{
 	.difference(washerKW)
 	.difference(bearing)
 }
-
+println "Bottom to shaft "+ distanceToShaft
+println "Shaft to top  "+ (boltLugL.getMaxZ()-distanceToShaft)
 return [outputGear,adrive,bdrive,bearing,nuts,bolts,allWashers,knuckelLeft,driveGearsFinal,
 upperNuts,
 bracket,
