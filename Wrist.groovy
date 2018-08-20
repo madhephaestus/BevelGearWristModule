@@ -235,13 +235,14 @@ outputGear=outputGear
 double knuckelY = args[0].getTotalY()+knuckelThicknessAdd*2
 double knuckelZ = distanceToShaft+(knuckelY/2)-gearThickness+knuckelThicknessAdd
 double knuckelX = encoderToEncoderDistance-(gearBThickness*2)-1
+def washerKW = allWashers.collect{it.hull().toolOffset(1)}
 def knuckel = new Cube(knuckelX,knuckelY,knuckelZ).toCSG()
 				.toZMin()
 				.movez(gearThickness+0.5)
 				.difference(sweep)
 				.difference(nuts)
 				.difference(bolts)
-				.difference(allWashers.collect{it.hull().toolOffset(1)})
+				.difference(washerKW)
 				.difference(bearing)
 				
 def bbox = knuckel.getBoundingBox()
@@ -292,7 +293,7 @@ def upperNuts = upperMountLocations.collect{
 	nut.roty(180).transformed(it)
 }
 def uppermountNuts = upperMountLocations.collect{
-	nutKeepaway.roty(180).transformed(it)
+	nutKeepaway.movez(-1).roty(180).transformed(it)
 }
 def upperBOlt = Vitamins.get("capScrew",size)
 			.movez(nut.getMaxZ()*2)
@@ -307,17 +308,45 @@ def uppermountBolts = upperMountLocations.collect{
 def upperSidemountBolts = mountLocationsOuterUpper.collect{
 	sideUpperBolt.transformed(it)
 }
-
+double mountBrackerY = upperSidemountBolts.get(0).getMaxY()*2
 def bracket = new Cube( outerBearingDistance-(motorBrackerTHick)*2,
-					upperSidemountBolts.get(0).getMaxY()*2,
+					mountBrackerY,
 					plateTHick).toCSG()
 			.toZMin()
 			.movez(boltMountHeight+nut.getMaxZ())
 			.difference(upperSidemountBolts)
 			.difference(uppermountBolts)
+			.difference(uppermountNuts)
+def boltLug = new Cube( motorBrackerTHick,
+					mountBrackerY,
+					plateTHick).toCSG()
+			.toZMin()
+			.movez(boltMountHeight+nut.getMaxZ())
+def motorHold = new Cube(motorBlank.getTotalX()+5,motorBlank.getTotalY()+5,motorBrackerTHick).toCSG()
+				.toZMin()
+				.toYMin()
+				.movey(-motorBlank.getMaxY()-2.5)
+def bearingLug = new Cube( motorBrackerTHick,
+					args[0].getTotalY()+2.5,
+					args[0].getTotalY()+2.5).toCSG()
+			.movez(distanceToShaft)	
+boltLug=boltLug.union(	bearingLug)					
+def motorHoldL = motorHold.transformed(	MotorLoacations.get(0))			
+def motorHoldR = motorHold.transformed(	MotorLoacations.get(1))	
+		
+def boltLugL = boltLug.toXMin().movex(bracket.getMaxX()).union(motorHoldL)	.hull()
+def boltLugR = boltLug.toXMax().movex(bracket.getMinX()).union(motorHoldR).hull()
 
-return [outputGear,adrive,bdrive,bearing,nuts,bolts,allWashers,knuckelLeft,driveGearsFinal,allMotors,allShafts,
+def motorBracketSets = [boltLugL,boltLugR].collect{
+	it.difference(upperSidemountBolts)
+	.difference(allMotors)
+	.difference(bolts)
+	.difference(washerKW)
+	.difference(bearing)
+}
+
+return [outputGear,adrive,bdrive,bearing,nuts,bolts,allWashers,knuckelLeft,driveGearsFinal,
 upperNuts,
-mountBolts,
-bracket
+bracket,
+motorBracketSets,
 ]
