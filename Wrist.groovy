@@ -10,10 +10,10 @@ for(String vitaminsType: Vitamins.listVitaminTypes()){
 	if(meta !=null && meta.containsKey("shaft"))
 		shaftOptions.add(vitaminsType);
 }
-StringParameter motors = new StringParameter("Motor Type","hobbyServo",motorOptions)
-StringParameter shafts = new StringParameter("Shaft Type","hobbyServoHorn",motorOptions)
-StringParameter motorSize = new StringParameter("Motor Size","towerProMG91",Vitamins.listVitaminSizes(motors.getStrValue()))
-StringParameter shaftSize = new StringParameter("Shaft Size","tproSG90_1",Vitamins.listVitaminSizes(shafts.getStrValue()))
+StringParameter motors = new StringParameter("Motor Type","roundMotor",motorOptions)
+StringParameter shafts = new StringParameter("Shaft Type","dShaft",shaftOptions)
+StringParameter motorSize = new StringParameter("Motor Size","WPI-gb37y3530-50en",Vitamins.listVitaminSizes(motors.getStrValue()))
+StringParameter shaftSize = new StringParameter("Shaft Size","WPI-gb37y3530-50en",Vitamins.listVitaminSizes(shafts.getStrValue()))
 
 def motorBlank= Vitamins.get(motors.getStrValue(),motorSize.getStrValue())
 def shaftBlank= Vitamins.get(shafts.getStrValue(),shaftSize.getStrValue())
