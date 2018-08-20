@@ -197,7 +197,11 @@ def mountLocations =[
 new Transform().translate(boltPattern,boltPattern,mountBoltHeight),
 new Transform().translate(-boltPattern,-boltPattern,mountBoltHeight),
 new Transform().translate(-boltPattern,boltPattern,mountBoltHeight),
-new Transform().translate(boltPattern,-boltPattern,mountBoltHeight)
+new Transform().translate(boltPattern,-boltPattern,mountBoltHeight),
+new Transform()
+	.rotx(90)
+	.movez(distanceToShaft+nut.getMaxX())
+	.movey(args[0].getMaxX()+knuckelThicknessAdd)
 ]
 def boltKeepaway = bolt.toolOffset(printerOffset.getMM())
 def NutKW =CSG.unionAll(Extrude.revolve(nut.hull().makeKeepaway(printerOffset.getMM()),
@@ -212,7 +216,7 @@ def bolts = nutLocations.collect{
 	boltKeepaway.transformed(it)
 }
 def mountNuts = mountLocations.collect{
-	nutKeepaway.transformed(it)
+	nutKeepaway.movez(-0.5).transformed(it)
 }
 nuts.addAll(mountLocations.collect{
 	nut.transformed(it)
@@ -222,11 +226,18 @@ def mountBolts = mountLocations.collect{
 }
 
 
-def sweep = Extrude.revolve(mountNuts[0].union(mountNuts[0].movez(0.5)),
-		(double)0, // rotation center radius, if 0 it is a circle, larger is a donut. Note it can be negative too
-		(double)360,// degrees through wich it should sweep
-		(int)20)//number of sweep increments
-	
+def sweep = new Cylinder(encoderToEncoderDistance/2, // Radius at the bottom
+                      		encoderToEncoderDistance/2, // Radius at the top
+                      		nut.getTotalZ()+2, // Height
+                      		(int)30 //resolution
+                      		).toCSG()//convert to CSG to display      
+			.difference(new Cylinder(args[0].getMaxY()+3, // Radius at the bottom
+                      		args[0].getMaxY()+3, // Radius at the top
+                      		nut.getTotalZ()+2, // Height
+                      		(int)30 //resolution
+                      		).toCSG())
+                .movez(gearThickness)
+               
 outputGear=outputGear
 			.union()
 			.difference(mountNuts)
@@ -244,6 +255,8 @@ def knuckel = new Cube(knuckelX,knuckelY,knuckelZ).toCSG()
 				.difference(bolts)
 				.difference(washerKW)
 				.difference(bearing)
+				.difference(mountBolts)
+				.difference(mountNuts)
 				
 def bbox = knuckel.getBoundingBox()
 			.toYMin()
