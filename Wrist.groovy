@@ -274,7 +274,7 @@ new Transform()
 ]
 double boltMountHeight =distanceToShaft*2-mountBoltHeight+ knuckelThicknessAdd
 double upperPlateBoltPattern  = boltPattern+7
-double motorBrackerTHick = washerThickness+args[0].getTotalZ()
+double motorBrackerTHick = washerThickness+args[0].getTotalZ()-printerOffset.getMM()
 def mountLocationsOuterUpper =[
 new Transform().roty(-90).movex(outerBearingDistance/2).movey(upperPlateBoltPattern),
 new Transform().roty(-90).movex(outerBearingDistance/2).movey(-upperPlateBoltPattern),
@@ -322,7 +322,7 @@ def upperSidemountBolts = mountLocationsOuterUpper.collect{
 	sideUpperBolt.transformed(it)
 }
 double mountBrackerY = upperSidemountBolts.get(0).getMaxY()*2
-def bracket = new Cube( outerBearingDistance-(motorBrackerTHick)*2,
+def bracket = new Cube( outerBearingDistance-(motorBrackerTHick)*2 +printerOffset.getMM()*2,
 					mountBrackerY,
 					plateTHick).toCSG()
 			.toZMin()
@@ -330,22 +330,22 @@ def bracket = new Cube( outerBearingDistance-(motorBrackerTHick)*2,
 			.difference(upperSidemountBolts)
 			.difference(uppermountBolts)
 			.difference(uppermountNuts)
-def boltLug = new Cube( motorBrackerTHick,
+def boltLug = new Cube( motorBrackerTHick-printerOffset.getMM(),
 					mountBrackerY,
 					plateTHick).toCSG()
 			.toZMin()
 			.movez(boltMountHeight+nut.getMaxZ())
-def motorHold = new Cube(motorBlank.getTotalX()+5,motorBlank.getTotalY()+5,motorBrackerTHick).toCSG()
+def motorHold = new Cube(motorBlank.getTotalX()+5,motorBlank.getTotalY()+5,motorBrackerTHick-printerOffset.getMM()).toCSG()
 				.toZMin()
 				.toYMin()
 				.movey(-motorBlank.getMaxY()-2.5)
-def bearingLug = new Cube( motorBrackerTHick,
+def bearingLug = new Cube( motorBrackerTHick-printerOffset.getMM(),
 					args[0].getTotalY()+2.5,
 					args[0].getTotalY()+2.5).toCSG()
 			.movez(distanceToShaft)	
 boltLug=boltLug.union(	bearingLug)					
-def motorHoldL = motorHold.transformed(	MotorLoacations.get(0))			
-def motorHoldR = motorHold.transformed(	MotorLoacations.get(1))	
+def motorHoldL = motorHold.transformed(	MotorLoacations.get(0)).movex(printerOffset.getMM())			
+def motorHoldR = motorHold.transformed(	MotorLoacations.get(1)).movex(-printerOffset.getMM())
 		
 def boltLugL = boltLug.toXMin().movex(bracket.getMaxX()).union(motorHoldL)	.hull()
 def boltLugR = boltLug.toXMax().movex(bracket.getMinX()).union(motorHoldR).hull()
