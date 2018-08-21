@@ -109,6 +109,9 @@ double distanceToShaft =bevelGears.get(3)
 double distancetoGearFace = bevelGears.get(2)
 double distanceToMotor = bevelGears.get(3)+spurGears[2]+spurGears[3]
 double shaftToMotor = spurGears[2]+spurGears[3]
+double knuckelY = args[0].getTotalY()+knuckelThicknessAdd*2
+double knuckelZ = distanceToShaft+(knuckelY/2)-gearThickness+knuckelThicknessAdd+nut.getMaxX()
+double knuckelX = encoderToEncoderDistance-(gearBThickness*2)-1
 def centeredSpur = spurGears[1].movex((spurGears[2]+spurGears[3]))
 				.toZMax()
 //return centeredSpur
@@ -148,14 +151,15 @@ CSG bearing =args[0].hull()
 def bearingHeight = bearingThickness+washerThickness+gearThickness
 def boltlenvalue= washerThickness*2+bearingThickness*2+gearBThickness+gearThickness+nutHeight
 println "Bolt length ="+boltlenvalue
-boltlen.setMM(actualBoltLength)
+boltlen.setMM(actualBoltLength+gearThickness)
 CSG bolt = Vitamins.get("capScrew",size)
 			.roty(180)
 			.toZMax()
-			.movez(nut.getMaxZ() +(actualBoltLength-boltlenvalue))
+			.movez(nut.getMaxZ() +(actualBoltLength-boltlenvalue-gearThickness))
 bearing=CSG.unionAll([bearing,
 		bearing.rotz(180),
 		args[0].hull().toZMax().movez(bearingHeight),
+		args[0].hull().toZMax().movez(knuckelZ+gearThickness+1),
 		innerBearing,
 		innerBearing.rotz(180)
 		])
@@ -166,7 +170,7 @@ CSG motor = 	args[2]
 
 def nutLocations =[
 new Transform()
-	.translate(0,0,bearingHeight+washerThickness/4)// X , y, z	
+	.translate(0,0,knuckelZ+gearThickness+1)// X , y, z	
  ,
  new Transform()
 		.translate( -bearingLocation+ bearingThickness+washerThickness/4,0,distanceToShaft)// X , y, z
@@ -261,9 +265,7 @@ outputGear=outputGear
 			.difference(mountNuts)
 			.difference(mountBolts)
 
-double knuckelY = args[0].getTotalY()+knuckelThicknessAdd*2
-double knuckelZ = distanceToShaft+(knuckelY/2)-gearThickness+knuckelThicknessAdd+nut.getMaxX()
-double knuckelX = encoderToEncoderDistance-(gearBThickness*2)-1
+
 def washerKW = allWashers.collect{it.hull().toolOffset(1)}
 def knuckel = new Cube(knuckelX,knuckelY,knuckelZ).toCSG()
 				.toZMin()
