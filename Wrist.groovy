@@ -382,7 +382,7 @@ def  releifHole= new Cylinder(bolt.getMaxX()+1,plateTHick).toCSG()
 bracket=bracket.difference(releifHole)
 println "Bottom to shaft "+ distanceToShaft
 println "Shaft to top  "+ (boltLugL.getMaxZ()-distanceToShaft)
-return [outputGear,adrive,bdrive,bearing,nuts,bolts,allWashers,knuckelLeft,driveGearsFinal,
+return [outputGear,adrive,bdrive,bearing,nuts,bolts,allWashers,knuckelLeft,knuckelRight,driveGearsFinal,
 upperNuts,
 bracket,
 motorBracketSets,
