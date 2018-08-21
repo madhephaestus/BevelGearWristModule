@@ -228,11 +228,11 @@ new Transform()
 def boltKeepaway = bolt.toolOffset(printerOffset.getMM())
 def NutKW =CSG.unionAll(Extrude.revolve(nut.hull().makeKeepaway(printerOffset.getMM()),
 		(double)0, // rotation center radius, if 0 it is a circle, larger is a donut. Note it can be negative too
-		(double)55,// degrees through wich it should sweep
+		(double)65,// degrees through wich it should sweep
 		(int)5))
 		
 def nuts = nutLocations.collect{
-	NutKW.movez(-0.5).transformed(it)
+	NutKW.movez(-0.75).transformed(it)
 }
 def bolts = nutLocations.collect{
 	boltKeepaway.transformed(it)
