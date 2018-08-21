@@ -206,22 +206,22 @@ new Transform().translate(boltPattern,-boltPattern,mountBoltHeight),
 new Transform()
 	.rotx(90)
 	.movez(upperNutsZ)
-	.movey(args[0].getMaxX()+knuckelThicknessAdd)
+	.movey(args[0].getMaxX()+knuckelThicknessAdd+2)
 	.movex(washerThickness+args[0].getTotalZ()+2),
 new Transform()
 	.rotx(90)
 	.movez(upperNutsZ)
-	.movey(args[0].getMaxX()+knuckelThicknessAdd)
+	.movey(args[0].getMaxX()+knuckelThicknessAdd+2)
 	.movex(-(washerThickness+args[0].getTotalZ()+2)),
 new Transform()
 	.rotx(90)
 	.movez(lowerNutsZ)
-	.movey(args[0].getMaxX()+knuckelThicknessAdd)
+	.movey(args[0].getMaxX()+knuckelThicknessAdd+2)
 	.movex(washerThickness+args[0].getTotalZ()+2),
 new Transform()
 	.rotx(90)
 	.movez(lowerNutsZ)
-	.movey(args[0].getMaxX()+knuckelThicknessAdd)
+	.movey(args[0].getMaxX()+knuckelThicknessAdd+2)
 	.movex(-(washerThickness+args[0].getTotalZ()+2))
 	
 ]
@@ -380,8 +380,10 @@ def motorBracketSets = [boltLugL,boltLugR].collect{
 def  releifHole= new Cylinder(bolt.getMaxX()+1,plateTHick).toCSG()
 			.movez(bracket.getMinZ())
 bracket=bracket.difference(releifHole)
+double upperDistLinkLen =  (boltLugL.getMaxZ()-distanceToShaft)
+
 println "Bottom to shaft "+ distanceToShaft
-println "Shaft to top  "+ (boltLugL.getMaxZ()-distanceToShaft)
+println "Shaft to top  "+ upperDistLinkLen
 return [outputGear,adrive,bdrive,
 //bearing,nuts,bolts,
 allWashers,knuckelLeft,knuckelRigth,driveGearsFinal,
