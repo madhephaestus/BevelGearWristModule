@@ -151,11 +151,11 @@ CSG bearing =args[0].hull()
 def bearingHeight = bearingThickness+washerThickness+gearThickness
 def boltlenvalue= washerThickness*2+bearingThickness*2+gearBThickness+gearThickness+nutHeight
 println "Bolt length ="+boltlenvalue
-boltlen.setMM(actualBoltLength+gearThickness)
+boltlen.setMM(actualBoltLength+gearThickness*2)
 CSG bolt = Vitamins.get("capScrew",size)
 			.roty(180)
 			.toZMax()
-			.movez(nut.getMaxZ() +(actualBoltLength-boltlenvalue-gearThickness))
+			.movez(nut.getMaxZ() +(actualBoltLength-boltlenvalue))
 bearing=CSG.unionAll([bearing,
 		bearing.rotz(180),
 		args[0].hull().toZMax().movez(bearingHeight),
@@ -377,6 +377,9 @@ def motorBracketSets = [boltLugL,boltLugR].collect{
 	.difference(washerKW)
 	.difference(bearing)
 }
+def  releifHole= new Cylinder(bolt.getMaxX()+1,plateTHick).toCSG()
+			.movez(bracket.getMinZ())
+bracket=bracket.difference(releifHole)
 println "Bottom to shaft "+ distanceToShaft
 println "Shaft to top  "+ (boltLugL.getMaxZ()-distanceToShaft)
 return [outputGear,adrive,bdrive,bearing,nuts,bolts,allWashers,knuckelLeft,driveGearsFinal,
