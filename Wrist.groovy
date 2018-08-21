@@ -17,7 +17,7 @@ StringParameter shaftSize = new StringParameter("Shaft Size","WPI-gb37y3530-50en
 
 def motorBlank= Vitamins.get(motors.getStrValue(),motorSize.getStrValue())
 def shaftBlank= Vitamins.get(shafts.getStrValue(),shaftSize.getStrValue())
-double motorAngleOffset = 60
+double motorAngleOffset = 65
 double knuckelThicknessAdd = 2
 double pitch = 6
 double pinRadius = ((3/16)*25.4+printerOffset.getMM())/2
@@ -191,7 +191,8 @@ outerPlateLocationL
 def allWashers = washerLocations.collect{
 	washer.transformed(it)
 }
-
+double upperNutsZ = distanceToShaft+args[0].getMaxX()+3.5
+double lowerNutsZ = distanceToShaft-args[0].getMaxX()-3.5
 def mountBoltHeight = gearThickness-1
 def mountLocations =[
 new Transform().translate(boltPattern,boltPattern,mountBoltHeight),
@@ -200,16 +201,22 @@ new Transform().translate(-boltPattern,boltPattern,mountBoltHeight),
 new Transform().translate(boltPattern,-boltPattern,mountBoltHeight),
 new Transform()
 	.rotx(90)
-	.movez(distanceToShaft+nut.getMaxX())
-	.movey(args[0].getMaxX()+knuckelThicknessAdd),
-new Transform()
-	.rotx(90)
-	.movez(distanceToShaft-args[0].getMaxX()-3.5)
+	.movez(upperNutsZ)
 	.movey(args[0].getMaxX()+knuckelThicknessAdd)
 	.movex(washerThickness+args[0].getTotalZ()+2),
 new Transform()
 	.rotx(90)
-	.movez(distanceToShaft-args[0].getMaxX()-3.5)
+	.movez(upperNutsZ)
+	.movey(args[0].getMaxX()+knuckelThicknessAdd)
+	.movex(-(washerThickness+args[0].getTotalZ()+2)),
+new Transform()
+	.rotx(90)
+	.movez(lowerNutsZ)
+	.movey(args[0].getMaxX()+knuckelThicknessAdd)
+	.movex(washerThickness+args[0].getTotalZ()+2),
+new Transform()
+	.rotx(90)
+	.movez(lowerNutsZ)
 	.movey(args[0].getMaxX()+knuckelThicknessAdd)
 	.movex(-(washerThickness+args[0].getTotalZ()+2))
 	
@@ -255,7 +262,7 @@ outputGear=outputGear
 			.difference(mountBolts)
 
 double knuckelY = args[0].getTotalY()+knuckelThicknessAdd*2
-double knuckelZ = distanceToShaft+(knuckelY/2)-gearThickness+knuckelThicknessAdd
+double knuckelZ = distanceToShaft+(knuckelY/2)-gearThickness+knuckelThicknessAdd+nut.getMaxX()
 double knuckelX = encoderToEncoderDistance-(gearBThickness*2)-1
 def washerKW = allWashers.collect{it.hull().toolOffset(1)}
 def knuckel = new Cube(knuckelX,knuckelY,knuckelZ).toCSG()
