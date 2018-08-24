@@ -1,6 +1,6 @@
 CSGDatabase.clear()
 LengthParameter printerOffset 			= new LengthParameter("printerOffset",0.5,[1.2,0])
-LengthParameter boltlen 			= new LengthParameter("Bolt Length",0.5,[1.2,0])
+LengthParameter boltlen 			= new LengthParameter("Bolt Length",0.65,[1.2,0])
 def motorOptions = []
 def shaftOptions = []
 for(String vitaminsType: Vitamins.listVitaminTypes()){
@@ -193,7 +193,11 @@ outerPlateLocationL
 ]
 
 def allWashers = washerLocations.collect{
-	washer.transformed(it)
+	def val = washer.transformed(it)
+	val.setManufacturing({ toMfg ->
+		return toMfg.transformed(it.inverse())
+	})
+	return val
 }
 double upperNutsZ = distanceToShaft+args[0].getMaxX()+3.5
 double lowerNutsZ = distanceToShaft-args[0].getMaxX()-3.5
@@ -385,6 +389,8 @@ double upperDistLinkLen =  (boltLugL.getMaxZ()-distanceToShaft)
 
 println "Bottom to shaft "+ distanceToShaft
 println "Shaft to top  "+ upperDistLinkLen
+
+
 return [outputGear,adrive,bdrive,
 //bearing,nuts,bolts,
 allWashers,knuckelLeft,knuckelRigth,driveGearsFinal,
