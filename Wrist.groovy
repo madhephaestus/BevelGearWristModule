@@ -19,7 +19,7 @@ def motorBlank= Vitamins.get(motors.getStrValue(),motorSize.getStrValue())
 def shaftBlank= Vitamins.get(shafts.getStrValue(),shaftSize.getStrValue())
 double motorAngleOffset = 65
 double knuckelThicknessAdd = 2
-double pitch = 6
+double pitch = 3
 double pinRadius = ((3/16)*25.4+printerOffset.getMM())/2
 double pinLength = (16)+ (printerOffset.getMM()*2)
 double actualBoltLength = 35
@@ -86,7 +86,7 @@ List<Object> spurGears = (List<Object>)ScriptingEngine
             "bevelGear.groovy" , // file to load
             // Parameters passed to the funcetion
             [	  bTeeth,// Number of teeth gear a
-	            12,// Number of teeth gear b
+	            20,// Number of teeth gear b
 	            gearThickness,// thickness of gear A
 	            pitch,// gear pitch in arch length mm
 	           0,
