@@ -31,7 +31,7 @@ CSG nut =Vitamins.get("lockNut",size)
 
 CSG nutKeepaway =nut.hull().makeKeepaway(printerOffset.getMM())
 double nutHeight = nut.getMaxZ()
-double washerRadius =  boltData.outerDiameter/2+printerOffset.getMM()*2
+double washerRadius =  boltData.outerDiameter/2+printerOffset.getMM()*3
 
 if(args == null){
 	args=[
@@ -485,10 +485,13 @@ motorBracketSets.get(1)
 			.toYMin()
 			.toZMin()
 })
-return [outputGear,adrive,bdrive,
-//bearing,nuts,bolts,
-allWashers,knuckelLeft,knuckelRigth,driveGearsFinal,
+def parts =[outputGear,adrive,bdrive,
+//bearing,nuts,bolts,,
+knuckelLeft,knuckelRigth,
 //upperNuts,
-bracket,
-motorBracketSets,
+bracket
 ]
+parts.addAll(allWashers)
+parts.addAll(driveGearsFinal)
+parts.addAll(motorBracketSets)
+return parts
