@@ -35,7 +35,7 @@ double washerRadius =  boltData.outerDiameter/2+printerOffset.getMM()*3
 
 if(args == null){
 	args=[
-		Vitamins.get("ballBearing","695zz"),
+		Vitamins.get("ballBearing","695zz").hull().makeKeepaway(printerOffset.getMM()).toZMin(),
 		new Cylinder(pinRadius,pinRadius,pinLength,(int)30).toCSG(), // steel reenforcmentPin
 		new Cylinder(pinRadius,pinRadius,pinLength,(int)30).toCSG().movez(-pinLength/2) // steel reenforcmentPin
 		
@@ -136,14 +136,14 @@ CSG bdrive = bevelGears.get(1).union(drivenB)
 // return the CSG parts
 
 double bearingLocation =  adrive.getMinX()-washerThickness
-CSG innerBearing = args[0].hull()
+CSG innerBearing = args[0]
 			.toZMin()
 			.roty(-90)
 			.toXMax()
 			.movex( bearingLocation)
 			.movez(bevelGears.get(3))
 
-CSG bearing =args[0].hull()
+CSG bearing =args[0]
 			.toZMin()
 			.roty(-90)
 			.movex(  encoderToEncoderDistance/2+gearThickness+washerThickness)
