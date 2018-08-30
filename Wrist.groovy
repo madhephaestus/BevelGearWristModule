@@ -409,7 +409,7 @@ bdrive.setName("bdrive")
 knuckelLeft.setName("knuckelLeft")
 	.setManufacturing({ toMfg ->
 	return toMfg
-			.rotx(-90)
+			.rotx(90)
 			.toXMin()
 			.toYMin()
 			.toZMin()
@@ -417,14 +417,14 @@ knuckelLeft.setName("knuckelLeft")
 knuckelRigth.setName("knuckelRigth")
 	.setManufacturing({ toMfg ->
 	return toMfg
-			.rotx(90)
+			.rotx(-90)
 			.toXMin()
 			.toYMin()
 			.toZMin()
 })
 bracket.setName("bracket")
 	.setManufacturing({ toMfg ->
-	return toMfg
+	return toMfg.roty(180)
 			.toXMin()
 			.toYMin()
 			.toZMin()
