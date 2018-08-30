@@ -389,8 +389,102 @@ double upperDistLinkLen =  (boltLugL.getMaxZ()-distanceToShaft)
 
 println "Bottom to shaft "+ distanceToShaft
 println "Shaft to top  "+ upperDistLinkLen
+outputGear.setName("outputGear")
+adrive.setName("adrive")
+	.setManufacturing({ toMfg ->
+	return toMfg
+			.roty(-90)
+			.toXMin()
+			.toYMin()
+			.toZMin()
+})	
+bdrive.setName("bdrive")
+	.setManufacturing({ toMfg ->
+	return toMfg
+			.roty(90)
+			.toXMin()
+			.toYMin()
+			.toZMin()
+})
+knuckelLeft.setName("knuckelLeft")
+	.setManufacturing({ toMfg ->
+	return toMfg
+			.rotx(-90)
+			.toXMin()
+			.toYMin()
+			.toZMin()
+})
+knuckelRigth.setName("knuckelRigth")
+	.setManufacturing({ toMfg ->
+	return toMfg
+			.rotx(90)
+			.toXMin()
+			.toYMin()
+			.toZMin()
+})
+bracket.setName("bracket")
+	.setManufacturing({ toMfg ->
+	return toMfg
+			.toXMin()
+			.toYMin()
+			.toZMin()
+})
+allWashers.get(0)
+	.setName("washer-"+0)
+	.setManufacturing({ toMfg ->
+	return toMfg
+			.toXMin()
+			.toYMin()
+			.toZMin()
+})
+for(int i=1;i<allWashers.size();i++){
+	allWashers.get(i)
+	.setName("washer-"+i)
+	.setManufacturing({ toMfg ->
+	return toMfg
+			.roty(90)
+			.toXMin()
+			.toYMin()
+			.toZMin()
+})
+}
 
-
+driveGearsFinal.get(0)
+	.setName("driveGearsFinal-"+0)
+	.setManufacturing({ toMfg ->
+	return toMfg
+			.roty(90)
+			.toXMin()
+			.toYMin()
+			.toZMin()
+})
+driveGearsFinal.get(1)
+	.setName("driveGearsFinal-"+1)
+	.setManufacturing({ toMfg ->
+	return toMfg
+			.roty(-90)
+			.toXMin()
+			.toYMin()
+			.toZMin()
+})
+motorBracketSets.get(0)
+	.setName("motorBracketSets-"+0)
+	.setManufacturing({ toMfg ->
+	return toMfg
+			.roty(90)
+			.toXMin()
+			.toYMin()
+			.toZMin()
+})
+motorBracketSets.get(1)
+	.setName("motorBracketSets-"+1)
+	.setManufacturing({ toMfg ->
+	return toMfg
+			.roty(-90)
+			.toXMin()
+			.toYMin()
+			.toZMin()
+})
 return [outputGear,adrive,bdrive,
 //bearing,nuts,bolts,
 allWashers,knuckelLeft,knuckelRigth,driveGearsFinal,
