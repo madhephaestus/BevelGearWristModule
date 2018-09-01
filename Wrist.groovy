@@ -408,8 +408,8 @@ def nearestFive(def num){
 	def mod = (num%5.0)
 	def offset = 5.0-mod
 	if(mod<1)
-		return num
-	return num
+		return num-mod
+	return num+offset
 }
 println "Bottom to shaft \t"+ distanceToShaft+" mm"
 println "Shaft to top    \t\t"+ upperDistLinkLen+" mm"
