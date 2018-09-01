@@ -19,10 +19,12 @@ def motorBlank= Vitamins.get(motors.getStrValue(),motorSize.getStrValue())
 def shaftBlank= Vitamins.get(shafts.getStrValue(),shaftSize.getStrValue())
 double motorAngleOffset = 65
 double knuckelThicknessAdd = 2
-double pitch = 3
+double pitch = 4
 double pinRadius = ((3/16)*25.4+printerOffset.getMM())/2
 double pinLength = (16)+ (printerOffset.getMM()*2)
-double actualBoltLength = 35
+
+double partsGapBetweenGearsAndBrackets = 2
+double actualBoltLength = 35+partsGapBetweenGearsAndBrackets*2
 double boltPattern = 10
 String size ="M5"
 HashMap<String, Object>  boltData = Vitamins.getConfiguration( "capScrew",size)
@@ -31,7 +33,7 @@ CSG nut =Vitamins.get("lockNut",size)
 
 CSG nutKeepaway =nut.hull().makeKeepaway(printerOffset.getMM())
 double nutHeight = nut.getMaxZ()
-double washerRadius =  boltData.outerDiameter/2+printerOffset.getMM()*3
+double washerRadius =  boltData.outerDiameter/2+printerOffset.getMM()*5
 
 if(args == null){
 	args=[
@@ -41,7 +43,7 @@ if(args == null){
 		
 	]
 }
-double washerThickness = motorBlank.getMaxZ()-args[0].getTotalZ()
+double washerThickness = motorBlank.getMaxZ()-args[0].getTotalZ()+partsGapBetweenGearsAndBrackets
 def washer = new Cylinder(washerRadius,washerThickness).toCSG()
 			.difference(new Cylinder(boltData.outerDiameter/2+printerOffset.getMM()/2,washerThickness).toCSG())
 def washerKeepaway = 	new Cylinder(washerRadius+printerOffset.getMM(),washerThickness).toCSG()	
@@ -62,7 +64,8 @@ double encoderToEncoderDistance =args[0].getMaxX()*3+
 					washerThickness*4 +
 					args[0].getMaxZ()*2+
 					bearingThickness*2+
-					nutHeight*2
+					nutHeight*2+
+					partsGapBetweenGearsAndBrackets*2
 
 int aTeeth =    Math.PI*(encoderToEncoderDistance+washerThickness*2)/pitch
 int bTeeth =    Math.PI*(args[0].getMaxX()+washerThickness*2+gearThickness+nutHeight)*2/pitch 
@@ -110,14 +113,15 @@ double distancetoGearFace = bevelGears.get(2)
 double distanceToMotor = bevelGears.get(3)+spurGears[2]+spurGears[3]
 double shaftToMotor = spurGears[2]+spurGears[3]
 double knuckelY = args[0].getTotalY()+knuckelThicknessAdd*2
-double knuckelZ = distanceToShaft+(knuckelY/2)-gearThickness+knuckelThicknessAdd+nut.getMaxX()
-double knuckelX = encoderToEncoderDistance-(gearBThickness*2)-1
+double knuckelZ = distanceToShaft+(knuckelY/2)-gearThickness+knuckelThicknessAdd+nut.getMaxX()-partsGapBetweenGearsAndBrackets
+double knuckelX = encoderToEncoderDistance-(gearBThickness*2)-1-partsGapBetweenGearsAndBrackets*2
 def centeredSpur = spurGears[1].movex((spurGears[2]+spurGears[3]))
 				.toZMax()
 //return centeredSpur
 
 def spurs =[spurGears[1],spurGears[0]].collect{
-		it.roty(-90)
+		it.rotz(spurGears[8]/2)
+		.roty(-90)
 		.movez(distanceToShaft)
 		.movex(distancetoGearFace)
 }
@@ -155,11 +159,11 @@ boltlen.setMM(actualBoltLength+gearThickness*2)
 CSG bolt = Vitamins.get("capScrew",size)
 			.roty(180)
 			.toZMax()
-			.movez(nut.getMaxZ() +(actualBoltLength-boltlenvalue))
+			.movez(nut.getMaxZ() +(actualBoltLength-boltlenvalue)+partsGapBetweenGearsAndBrackets)
 bearing=CSG.unionAll([bearing,
 		bearing.rotz(180),
 		args[0].hull().toZMax().movez(bearingHeight),
-		args[0].hull().toZMax().movez(knuckelZ+gearThickness+1),
+		args[0].hull().toZMax().movez(knuckelZ+gearThickness+1+partsGapBetweenGearsAndBrackets),
 		innerBearing,
 		innerBearing.rotz(180)
 		])
@@ -167,17 +171,17 @@ bearing=CSG.unionAll([bearing,
 CSG motor = 	args[2]
 			.roty(-90)
 			.movez(	distanceToMotor)
-
+double washerTobearing = args[0].getTotalZ()+printerOffset.getMM()*2
 def nutLocations =[
 new Transform()
-	.translate(0,0,knuckelZ+gearThickness+1)// X , y, z	
+	.translate(0,0,knuckelZ+gearThickness+1+partsGapBetweenGearsAndBrackets)// X , y, z	
  ,
  new Transform()
-		.translate( -bearingLocation+ bearingThickness+washerThickness/4,0,distanceToShaft)// X , y, z
+		.translate( -bearingLocation+ washerTobearing,0,distanceToShaft)// X , y, z
 		.rot( 0, -90, 0) // x,y,z
   ,
   new Transform()
-		.translate(bearingLocation-bearingThickness-washerThickness/4,0,distanceToShaft)// X , y, z		
+		.translate(bearingLocation-washerTobearing,0,distanceToShaft)// X , y, z		
 		.rot( 0, 90, 0) // x,y,z
 		
 ]
@@ -257,8 +261,8 @@ def sweep = new Cylinder(encoderToEncoderDistance/2, // Radius at the bottom
                       		nut.getTotalZ()+2, // Height
                       		(int)30 //resolution
                       		).toCSG()//convert to CSG to display      
-			.difference(new Cylinder(args[0].getMaxY()+3, // Radius at the bottom
-                      		args[0].getMaxY()+3, // Radius at the top
+			.difference(new Cylinder(args[0].getMaxY()+2, // Radius at the bottom
+                      		args[0].getMaxY()+2, // Radius at the top
                       		nut.getTotalZ()+2, // Height
                       		(int)30 //resolution
                       		).toCSG())
@@ -273,7 +277,7 @@ outputGear=outputGear
 def washerKW = allWashers.collect{it.hull().toolOffset(1)}
 def knuckel = new Cube(knuckelX,knuckelY,knuckelZ).toCSG()
 				.toZMin()
-				.movez(gearThickness+0.5)
+				.movez(gearThickness+0.5+partsGapBetweenGearsAndBrackets)
 				.difference(sweep)
 				.difference(nuts)
 				.difference(bolts)
@@ -486,7 +490,8 @@ motorBracketSets.get(1)
 			.toZMin()
 })
 def parts =[outputGear,adrive,bdrive,
-//bearing,nuts,bolts,,
+//bearing,
+nuts,bolts,
 knuckelLeft,knuckelRigth,
 //upperNuts,
 bracket
