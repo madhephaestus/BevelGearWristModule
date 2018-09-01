@@ -339,8 +339,7 @@ def uppermountNuts = upperMountLocations.collect{
 def upperBOlt = Vitamins.get("capScrew",size)
 			.movez(nut.getMaxZ()*2)
 			.toolOffset(printerOffset.getMM())
-boltlen.setMM(7
-5)
+boltlen.setMM(75)
 def sideUpperBolt = Vitamins.get("capScrew",size)
 			.toolOffset(printerOffset.getMM())
 def uppermountBolts = upperMountLocations.collect{
