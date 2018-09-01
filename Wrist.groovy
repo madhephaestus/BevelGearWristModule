@@ -23,7 +23,7 @@ double pitch = 4
 double pinRadius = ((3/16)*25.4+printerOffset.getMM())/2
 double pinLength = (16)+ (printerOffset.getMM()*2)
 
-double partsGapBetweenGearsAndBrackets =5
+double partsGapBetweenGearsAndBrackets =2
 double actualBoltLength = 35+partsGapBetweenGearsAndBrackets*2
 double boltPattern = 10
 String size ="M5"
@@ -43,7 +43,8 @@ if(args == null){
 		
 	]
 }
-double washerThickness = motorBlank.getMaxZ()-args[0].getTotalZ()+partsGapBetweenGearsAndBrackets
+double washerInset = motorBlank.getMaxZ()-args[0].getTotalZ()
+double washerThickness = washerInset+partsGapBetweenGearsAndBrackets
 def washer = new Cylinder(washerRadius,washerThickness).toCSG()
 			.difference(new Cylinder(boltData.outerDiameter/2+printerOffset.getMM()/2,washerThickness).toCSG())
 def washerKeepaway = 	new Cylinder(washerRadius+printerOffset.getMM(),washerThickness).toCSG()	
@@ -300,9 +301,9 @@ new Transform()
 new Transform()
 	.roty(90).movez(shaftToMotor).rotx(motorAngleOffset).movez(distanceToShaft).movex(-distToGearEdge)
 ]
-double boltMountHeight =distanceToShaft*2-mountBoltHeight+ knuckelThicknessAdd
+double boltMountHeight =adrive.getMaxZ()+partsGapBetweenGearsAndBrackets
 double upperPlateBoltPattern  = boltPattern+7
-double motorBrackerTHick = washerThickness+args[0].getTotalZ()-printerOffset.getMM()
+double motorBrackerTHick = washerInset+args[0].getTotalZ()
 def mountLocationsOuterUpper =[
 new Transform().roty(-90).movex(outerBearingDistance/2).movey(upperPlateBoltPattern),
 new Transform().roty(-90).movex(outerBearingDistance/2).movey(-upperPlateBoltPattern),
@@ -350,8 +351,8 @@ def upperSidemountBolts = mountLocationsOuterUpper.collect{
 	sideUpperBolt.transformed(it)
 }
 double mountBrackerY = upperSidemountBolts.get(0).getMaxY()*2
-double actualMotorThickness = motorBrackerTHick-printerOffset.getMM()*2
-def bracket = new Cube( outerBearingDistance-(motorBrackerTHick)*2 -printerOffset.getMM()+partsGapBetweenGearsAndBrackets,
+double actualMotorThickness = motorBrackerTHick
+def bracket = new Cube( outerBearingDistance-(bearingThickness+washerInset)*2,
 					mountBrackerY,
 					plateTHick).toCSG()
 			.toZMin()
@@ -364,7 +365,9 @@ def boltLug = new Cube( actualMotorThickness,
 					plateTHick).toCSG()
 			.toZMin()
 			.movez(boltMountHeight+nut.getMaxZ())
-def motorHold = new Cube(motorBlank.getTotalX()+5,motorBlank.getTotalY()+5,actualMotorThickness).toCSG()
+def motorHold = new Cube(motorBlank.getTotalX()+5,
+					motorBlank.getTotalY()+5,
+					actualMotorThickness).toCSG()
 				.toZMin()
 				.toYMin()
 				.movey(-motorBlank.getMaxY()-2.5)
@@ -490,10 +493,10 @@ motorBracketSets.get(1)
 			.toZMin()
 })
 def parts =[outputGear,adrive,bdrive,
-//bearing,
-nuts,bolts,
+bearing,
+nuts,bolts,upperSidemountBolts,
 knuckelLeft,knuckelRigth,
-//upperNuts,
+upperNuts,
 bracket
 ]
 parts.addAll(allWashers)
