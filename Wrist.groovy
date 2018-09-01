@@ -411,13 +411,13 @@ def nearestFive(def num){
 		return num
 	return num
 }
-println "Bottom to shaft "+ distanceToShaft+" mm"
-println "Shaft to top    "+ upperDistLinkLen+" mm"
-println "2x Top bolt     M5-"+ nearestFive(bracket.getTotalX()+actualMotorThickness*2+nut.getTotalZ())+" mm"
-println "1x Center Bolt  M5-" +nearestFive(knuckelRigth.getMaxZ()+nut.getTotalZ())+" mm"
-println "4x Knuckel Bolt M5-" +nearestFive(knuckelRigth.getTotalY()*2+nut.getTotalZ())+" mm"
-println "8x Mount Bolt   M5-" +nearestFive(outputGear.getTotalZ()+bracket.getTotalZ()+nut.getTotalZ())+" mm"
-println "2x Axil Bolt    M5-" +nearestFive(outerBearingDistance/2-3)+" mm"
+println "Bottom to shaft \t"+ distanceToShaft+" mm"
+println "Shaft to top    \t\t"+ upperDistLinkLen+" mm"
+println "2x Top bolt     \t\tM5-"+ nearestFive(bracket.getTotalX()+actualMotorThickness*2+nut.getTotalZ())+" mm"
+println "1x Center Bolt  \tM5-" +nearestFive(knuckelRigth.getMaxZ()+nut.getTotalZ())+" mm"
+println "4x Knuckel Bolt \tM5-" +nearestFive(knuckelRigth.getTotalY()*2+nut.getTotalZ())+" mm"
+println "8x Mount Bolt   \tM5-" +nearestFive(outputGear.getTotalZ()+bracket.getTotalZ()+nut.getTotalZ())+" mm"
+println "2x Axil Bolt    \t\tM5-" +nearestFive(outerBearingDistance/2-3)+" mm"
 println "17x M5 lock nuts " 
 println "6x 695zz bearings " 
 
