@@ -23,7 +23,7 @@ double pitch = 4
 double pinRadius = ((3/16)*25.4+printerOffset.getMM())/2
 double pinLength = (16)+ (printerOffset.getMM()*2)
 
-double partsGapBetweenGearsAndBrackets = 2
+double partsGapBetweenGearsAndBrackets =5
 double actualBoltLength = 35+partsGapBetweenGearsAndBrackets*2
 double boltPattern = 10
 String size ="M5"
@@ -215,22 +215,22 @@ new Transform()
 	.rotx(90)
 	.movez(upperNutsZ)
 	.movey(args[0].getMaxX()+knuckelThicknessAdd+2)
-	.movex(washerThickness+args[0].getTotalZ()+2),
+	.movex(nutHeight+args[0].getTotalZ()+2),
 new Transform()
 	.rotx(90)
 	.movez(upperNutsZ)
 	.movey(args[0].getMaxX()+knuckelThicknessAdd+2)
-	.movex(-(washerThickness+args[0].getTotalZ()+2)),
+	.movex(-(nutHeight+args[0].getTotalZ()+2)),
 new Transform()
 	.rotx(90)
 	.movez(lowerNutsZ)
 	.movey(args[0].getMaxX()+knuckelThicknessAdd+2)
-	.movex(washerThickness+args[0].getTotalZ()+2),
+	.movex(nutHeight+args[0].getTotalZ()+2),
 new Transform()
 	.rotx(90)
 	.movez(lowerNutsZ)
 	.movey(args[0].getMaxX()+knuckelThicknessAdd+2)
-	.movex(-(washerThickness+args[0].getTotalZ()+2))
+	.movex(-(nutHeight+args[0].getTotalZ()+2))
 	
 ]
 def boltKeepaway = bolt.toolOffset(printerOffset.getMM())
@@ -292,7 +292,7 @@ def knuckelLeft = knuckel.intersect(bbox)
 def knuckelRigth = knuckel.difference(bbox)
 
 
-double distToGearEdge = encoderToEncoderDistance/2+gearThickness+partsGapBetweenGearsAndBrackets
+double distToGearEdge = encoderToEncoderDistance/2+gearThickness
 
 def MotorLoacations = [
 new Transform()
@@ -302,7 +302,7 @@ new Transform()
 ]
 double boltMountHeight =distanceToShaft*2-mountBoltHeight+ knuckelThicknessAdd
 double upperPlateBoltPattern  = boltPattern+7
-double motorBrackerTHick = washerThickness+args[0].getTotalZ()-printerOffset.getMM()-partsGapBetweenGearsAndBrackets
+double motorBrackerTHick = washerThickness+args[0].getTotalZ()-printerOffset.getMM()
 def mountLocationsOuterUpper =[
 new Transform().roty(-90).movex(outerBearingDistance/2).movey(upperPlateBoltPattern),
 new Transform().roty(-90).movex(outerBearingDistance/2).movey(-upperPlateBoltPattern),
@@ -350,8 +350,8 @@ def upperSidemountBolts = mountLocationsOuterUpper.collect{
 	sideUpperBolt.transformed(it)
 }
 double mountBrackerY = upperSidemountBolts.get(0).getMaxY()*2
-double actualMotorThickness = motorBrackerTHick-printerOffset.getMM()
-def bracket = new Cube( outerBearingDistance-(motorBrackerTHick)*2 +printerOffset.getMM()*2+partsGapBetweenGearsAndBrackets,
+double actualMotorThickness = motorBrackerTHick-printerOffset.getMM()*2
+def bracket = new Cube( outerBearingDistance-(motorBrackerTHick)*2 -printerOffset.getMM()+partsGapBetweenGearsAndBrackets,
 					mountBrackerY,
 					plateTHick).toCSG()
 			.toZMin()
