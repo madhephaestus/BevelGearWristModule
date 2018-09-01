@@ -418,7 +418,7 @@ println "1x Center Bolt length " +nearestFive(knuckelRigth.getMaxZ()+nut.getTota
 println "4x Knuckel Bolt length " +nearestFive(knuckelRigth.getTotalY()*2+nut.getTotalZ())
 println "8x Mount Bolt length " +nearestFive(outputGear.getTotalZ()+bracket.getTotalZ()+nut.getTotalZ())
 println "2x Axil Bolt length " +nearestFive(outerBearingDistance/2-3)
-
+println "17x nuts " 
 outputGear.setName("outputGear")
 adrive.setName("adrive")
 	.setManufacturing({ toMfg ->
