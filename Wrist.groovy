@@ -1,6 +1,6 @@
 CSGDatabase.clear()
 LengthParameter printerOffset 			= new LengthParameter("printerOffset",0.5,[1.2,0])
-LengthParameter boltlen 			= new LengthParameter("Bolt Length",0.65,[1.2,0])
+LengthParameter boltlen 			= new LengthParameter("Bolt Length",0.675,[1.2,0])
 def motorOptions = []
 def shaftOptions = []
 for(String vitaminsType: Vitamins.listVitaminTypes()){
@@ -23,7 +23,7 @@ double pitch = 4
 double pinRadius = ((3/16)*25.4+printerOffset.getMM())/2
 double pinLength = (16)+ (printerOffset.getMM()*2)
 
-double partsGapBetweenGearsAndBrackets =2
+double partsGapBetweenGearsAndBrackets =1
 double actualBoltLength = 35+partsGapBetweenGearsAndBrackets*2
 double boltPattern = 10
 String size ="M5"
@@ -70,7 +70,6 @@ double encoderToEncoderDistance =args[0].getMaxX()*3+
 
 int aTeeth =    Math.PI*(encoderToEncoderDistance+washerThickness*2)/pitch
 int bTeeth =    Math.PI*(args[0].getMaxX()+washerThickness*2+gearThickness+nutHeight)*2/pitch 
-
 // call a script from another library
 List<Object> bevelGears = (List<Object>)ScriptingEngine
 					 .gitScriptRun(
@@ -121,7 +120,8 @@ def centeredSpur = spurGears[1].movex((spurGears[2]+spurGears[3]))
 //return centeredSpur
 
 def spurs =[spurGears[1],spurGears[0]].collect{
-		it.rotz(spurGears[8]/2)
+		it
+		.rotz(bTeeth%2!=0?0:spurGears[8]/2)
 		.roty(-90)
 		.movez(distanceToShaft)
 		.movex(distancetoGearFace)
@@ -234,6 +234,7 @@ new Transform()
 	.movex(-(nutHeight+args[0].getTotalZ()+2))
 	
 ]
+println "Making Bolt keepaway"
 def boltKeepaway = bolt.toolOffset(printerOffset.getMM())
 def NutKW =CSG.unionAll(Extrude.revolve(nut.hull().makeKeepaway(printerOffset.getMM()),
 		(double)0, // rotation center radius, if 0 it is a circle, larger is a donut. Note it can be negative too
@@ -263,19 +264,22 @@ def sweep = new Cylinder(encoderToEncoderDistance/2, // Radius at the bottom
                       		(int)30 //resolution
                       		).toCSG()//convert to CSG to display      
 			.difference(new Cylinder(args[0].getMaxY()+2, // Radius at the bottom
-                      		args[0].getMaxY()+2, // Radius at the top
+                      		args[0].getMaxY()+3, // Radius at the top
                       		nut.getTotalZ()+2, // Height
                       		(int)30 //resolution
                       		).toCSG())
                 .movez(gearThickness)
                
 outputGear=outputGear
-			.union()
+			.union(allWashers.get(0))
 			.difference(mountNuts)
 			.difference(mountBolts)
-
-
+			.union()
+adrive=adrive.union(allWashers.get(1))
+bdrive=bdrive.union(allWashers.get(3))
+println "Making Washer keepaway"
 def washerKW = allWashers.collect{it.hull().toolOffset(1)}
+println "Making Knuckel"
 def knuckel = new Cube(knuckelX,knuckelY,knuckelZ).toCSG()
 				.toZMin()
 				.movez(gearThickness+0.5+partsGapBetweenGearsAndBrackets)
@@ -286,7 +290,7 @@ def knuckel = new Cube(knuckelX,knuckelY,knuckelZ).toCSG()
 				.difference(bearing)
 				.difference(mountBolts)
 				.difference(mountNuts)
-				
+println "Slicing Knuckel"				
 def bbox = knuckel.getBoundingBox()
 			.toYMin()
 def knuckelLeft = knuckel.intersect(bbox)
@@ -301,7 +305,7 @@ new Transform()
 new Transform()
 	.roty(90).movez(shaftToMotor).rotx(motorAngleOffset).movez(distanceToShaft).movex(-distToGearEdge)
 ]
-double boltMountHeight =adrive.getMaxZ()+partsGapBetweenGearsAndBrackets
+double boltMountHeight =adrive.getMaxZ()
 double upperPlateBoltPattern  = boltPattern+7
 double motorBrackerTHick = washerInset+args[0].getTotalZ()
 def mountLocationsOuterUpper =[
@@ -312,10 +316,12 @@ new Transform().roty(90).movex(-outerBearingDistance/2).movey(-upperPlateBoltPat
 ].collect{
 	it.movez(boltMountHeight+nut.getMaxZ()*2)
 }
+println "Placing gears"
 def driveGearsFinal = MotorLoacations.collect{
 	centeredSpur.difference (shaftBlank
 	.toZMax()).transformed(it)
 }
+println "Placing Motors"
 def allMotors = MotorLoacations.collect{
 	motorBlank
 	.toZMax()
@@ -337,10 +343,12 @@ def upperNuts = upperMountLocations.collect{
 def uppermountNuts = upperMountLocations.collect{
 	nutKeepaway.movez(-1).roty(180).transformed(it)
 }
+println "Making Upper Screw keepaway"
 def upperBOlt = Vitamins.get("capScrew",size)
 			.movez(nut.getMaxZ()*2)
 			.toolOffset(printerOffset.getMM())
 boltlen.setMM(75)
+println "Making Upper Screw keepaway 2"
 def sideUpperBolt = Vitamins.get("capScrew",size)
 			.toolOffset(printerOffset.getMM())
 def uppermountBolts = upperMountLocations.collect{
@@ -352,6 +360,7 @@ def upperSidemountBolts = mountLocationsOuterUpper.collect{
 }
 double mountBrackerY = upperSidemountBolts.get(0).getMaxY()*2
 double actualMotorThickness = motorBrackerTHick
+println "Making upper bracket"
 def bracket = new Cube( outerBearingDistance-(bearingThickness+washerInset)*2,
 					mountBrackerY,
 					plateTHick).toCSG()
@@ -360,6 +369,7 @@ def bracket = new Cube( outerBearingDistance-(bearingThickness+washerInset)*2,
 			.difference(upperSidemountBolts)
 			.difference(uppermountBolts)
 			.difference(uppermountNuts)
+println "Making lower brackets "
 def boltLug = new Cube( actualMotorThickness,
 					mountBrackerY,
 					plateTHick).toCSG()
@@ -378,10 +388,11 @@ def bearingLug = new Cube(actualMotorThickness,
 boltLug=boltLug.union(	bearingLug)					
 def motorHoldL = motorHold.transformed(	MotorLoacations.get(0)).movex(printerOffset.getMM()).toXMin().movex(bracket.getMaxX())			
 def motorHoldR = motorHold.transformed(	MotorLoacations.get(1)).movex(-printerOffset.getMM()).toXMax().movex(bracket.getMinX())
-		
+println "Hull lower bracket left"
 def boltLugL = boltLug.toXMin().movex(bracket.getMaxX()).union(motorHoldL)	.hull()
+println "Hull lower bracket right"
 def boltLugR = boltLug.toXMax().movex(bracket.getMinX()).union(motorHoldR).hull()
-
+println "Making lower brackets cutouts "
 def motorBracketSets = [boltLugL,boltLugR].collect{
 	it.difference(upperSidemountBolts)
 	.difference(allMotors)
@@ -393,9 +404,21 @@ def  releifHole= new Cylinder(bolt.getMaxX()+1,plateTHick).toCSG()
 			.movez(bracket.getMinZ())
 bracket=bracket.difference(releifHole)
 double upperDistLinkLen =  (boltLugL.getMaxZ()-distanceToShaft)
-
+def nearestFive(def num){
+	def mod = (num%5.0)
+	def offset = 5.0-mod
+	if(mod<1)
+		return [num-mod,num]
+	return [num+offset,num]
+}
 println "Bottom to shaft "+ distanceToShaft
 println "Shaft to top  "+ upperDistLinkLen
+println "2x Top bolt length  "+ nearestFive(bracket.getTotalX()+actualMotorThickness*2+nut.getTotalZ())
+println "1x Center Bolt length " +nearestFive(knuckelRigth.getMaxZ()+nut.getTotalZ())
+println "4x Knuckel Bolt length " +nearestFive(knuckelRigth.getTotalY()*2+nut.getTotalZ())
+println "8x Mount Bolt length " +nearestFive(outputGear.getTotalZ()+bracket.getTotalZ()+nut.getTotalZ())
+println "2x Axil Bolt length " +nearestFive(outerBearingDistance/2-3)
+
 outputGear.setName("outputGear")
 adrive.setName("adrive")
 	.setManufacturing({ toMfg ->
@@ -493,13 +516,15 @@ motorBracketSets.get(1)
 			.toZMin()
 })
 def parts =[outputGear,adrive,bdrive,
-bearing,
-nuts,bolts,upperSidemountBolts,
+//bearing,
+//nuts,bolts,upperSidemountBolts,
 knuckelLeft,knuckelRigth,
-upperNuts,
-bracket
+//upperNuts,
+bracket,
+allWashers.get(2),
+allWashers.get(4),
 ]
-parts.addAll(allWashers)
+//parts.addAll(allWashers)
 parts.addAll(driveGearsFinal)
 parts.addAll(motorBracketSets)
 return parts
